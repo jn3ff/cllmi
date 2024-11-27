@@ -69,6 +69,7 @@ async fn main() {
         .read_line(&mut input)
         .expect("Failed to read line");
 
+    // TODO: use key events. c -> enter is annoying
     match input.trim() {
         "" => {
             let output = Command::new("sh")
@@ -111,7 +112,7 @@ async fn ask_claude(
     let payload = serde_json::json!({
         "model": model,
         "max_tokens": 1024,
-        "system": get_sys_prompt(),
+        "system": get_sys_prompt(), //TODO: make sys prompt static
         "messages": [
             {"role": "user", "content": req.to_payload()}
         ]
