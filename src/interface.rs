@@ -149,11 +149,15 @@ pub fn get_last_command() -> Result<Request, CommandError> {
     let cmd = String::from_utf8_lossy(&last_cmd.stdout)
         .lines() // split into lines
         .next() // get the first line (second-to-last command, not cllmi or cargo run)
-        .unwrap_or("")
+        .ok_or(CommandError::Extract(String::from(
+            "No command found in history file",
+        )))?
         .split(";")
         .collect::<Vec<&str>>()
         .last()
-        .expect("Command needs to be contentful")
+        .ok_or(CommandError::Extract(String::from(
+            "Command needs to be contentful",
+        )))?
         .to_string();
     // rerun the command to get its output
     let output = Command::new("sh")

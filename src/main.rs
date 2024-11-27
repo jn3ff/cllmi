@@ -42,9 +42,9 @@ async fn main() {
             Some("Please infer desired usage from the provided command"),
             false,
         )
-        .unwrap();
+        .expect("could not construct guide command");
     } else {
-        req = get_last_command().unwrap();
+        req = get_last_command().expect("last command not present");
     }
 
     if !args.context.is_empty() {
