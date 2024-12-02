@@ -23,10 +23,10 @@ pub fn get_sys_prompt() -> String {
     "[fixed_command]: git push --set-upstream origin <branch-name> [justification]: The branch is not yet published, this command will publish the branch to remote and enable pushing"
 
     An example with context is if you receive:
-    "[command]: cat somefile.txt > somefile.txt [output]: None [context]: This command is overwriting my somefile.txt, I want it to append instead
+    "[command]: cat somefile.txt > someotherfile.txt [output]: None [context]: This command is overwriting my someotherfile.txt, I want it to append instead
 
     you might respond with:
-    "[fixed_command]: cat somefile.txt >> somefile.txt [justification]: Using the '>>' operator compels appending behavior"
+    "[fixed_command]: cat somefile.txt >> someotherfile.txt [justification]: Using the '>>' operator compels appending behavior"
 
     You may also receive a tag in the request, denoted "[justification_requested]" If you receive this tag, you should always respond with justification. You should also always respond with justification if you receive a [context] tag.
 

@@ -47,8 +47,7 @@ async fn main() {
             None,
             Some("Please infer desired usage from the provided command"),
             false,
-        )
-        .expect("could not construct guide command");
+        );
     } else {
         req = get_last_command().expect("last command not present");
     }
@@ -115,7 +114,7 @@ async fn ask_claude(
         "max_tokens": 1024,
         "system": *SYS_PROMPT,
         "messages": [
-            {"role": "user", "content": req.to_payload()}
+            {"role": "user", "content": req.to_payload().expect("invalid payload")}
         ]
     });
 

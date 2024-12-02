@@ -27,12 +27,8 @@ impl Request {
         output: Option<&str>,
         context: Option<&str>,
         justification_requested: bool,
-    ) -> Result<Self, RequestError> {
-        //validation
-        if !(output.is_some() || context.is_some()) {
-            return Err(RequestError::MissingContext(String::from("Your command was successful (no output), but no context was provided. Please provide context now: ")));
-        }
-        Ok(Request {
+    ) -> Self {
+        Request {
             command: String::from("[command]: ") + command,
             output: output.map(|e| String::from("[output]: ") + e),
             context: context.map(|c| String::from("[context]: ") + c),
@@ -41,10 +37,14 @@ impl Request {
             } else {
                 None
             },
-        })
+        }
     }
 
-    pub fn to_payload(&self) -> String {
+    pub fn to_payload(&self) -> Result<String, RequestError> {
+        //validation
+        if !(self.output.is_some() || self.context.is_some()) {
+            return Err(RequestError::MissingContext(String::from("Your command was successful (no output), but no context was provided. Please provide context now: ")));
+        }
         let mut payload = self.command.to_string();
         if let Some(output) = self.output.as_ref() {
             payload += " ";
@@ -59,7 +59,7 @@ impl Request {
             payload += jr.as_str();
         }
 
-        payload
+        Ok(payload)
     }
 
     pub fn add_context(&mut self, context: String) {
@@ -138,7 +138,6 @@ pub enum CommandError {
     NoHistoryFile(String),
     Extract(String),
     Run(String),
-    RequestConstruction(RequestError),
 }
 
 pub fn get_last_command() -> Result<Request, CommandError> {
@@ -180,7 +179,7 @@ pub fn get_last_command() -> Result<Request, CommandError> {
         Some(error_output.as_str())
     };
 
-    Request::new(cmd.as_str(), error_option, None, false).map_err(CommandError::RequestConstruction)
+    Ok(Request::new(cmd.as_str(), error_option, None, false))
 }
 
 pub fn run_command_with_history(command: &String) -> Result<Output, Box<dyn Error>> {
