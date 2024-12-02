@@ -1,8 +1,8 @@
-use std::{env::var, process::Command};
+use std::env::var;
 
 use clap::{command, Parser};
 use clipboard::{ClipboardContext, ClipboardProvider};
-use interface::{get_last_command, Request};
+use interface::{get_last_command, run_command_with_history, Request};
 use sysprompt::get_sys_prompt;
 
 mod interface;
@@ -12,6 +12,7 @@ mod sysprompt;
 #[command(version, about, long_about = None)]
 struct Args {
     /// Model to use. This gets sent straight to the api, so if you override, make sure it's a valid model string
+    /// I also have not tested it at all with anything other than the default
     #[arg(short, long, default_value_t = String::from("claude-3-5-sonnet-20241022"))]
     model: String,
     /// Any contextual information about the goal of your command, to be sent to the api so it can make a better decision
@@ -71,22 +72,17 @@ async fn main() {
 
     // TODO: use key events. c -> enter is annoying
     match input.trim() {
-        "" => {
-            let output = Command::new("sh")
-                .arg("-c")
-                .arg(&res.command)
-                .output()
-                .expect("Failed to execute command");
-            if !output.stdout.is_empty() {
-                println!("{}", String::from_utf8_lossy(&output.stdout));
+        "" => match run_command_with_history(&res.command) {
+            Ok(output) => {
+                if !output.status.success() {
+                    std::process::exit(output.status.code().unwrap_or(1));
+                }
             }
-            if !output.stderr.is_empty() {
-                eprintln!("{}", String::from_utf8_lossy(&output.stderr));
+            Err(e) => {
+                eprintln!("Could not successfully run command from cli output");
+                panic!("{:?}", e);
             }
-            if !output.status.success() {
-                std::process::exit(output.status.code().unwrap_or(1));
-            }
-        }
+        },
         "c" => {
             let mut ctx: ClipboardContext =
                 ClipboardProvider::new().expect("Failed to initialize clipboard");

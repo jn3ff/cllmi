@@ -1,4 +1,11 @@
-use std::{env::var, process::Command};
+use std::{
+    env::var,
+    error::Error,
+    fs::OpenOptions,
+    io::Write,
+    process::{Command, Output},
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use serde::{Deserialize, Serialize};
 
@@ -9,7 +16,7 @@ pub enum RequestError {
 
 pub struct Request {
     command: String,
-    error: Option<String>,
+    output: Option<String>,
     context: Option<String>,
     justification_requested: Option<String>,
 }
@@ -17,17 +24,17 @@ pub struct Request {
 impl Request {
     pub fn new(
         command: &str,
-        error: Option<&str>,
+        output: Option<&str>,
         context: Option<&str>,
         justification_requested: bool,
     ) -> Result<Self, RequestError> {
         //validation
-        if !(error.is_some() || context.is_some()) {
-            return Err(RequestError::MissingContext(String::from("Your command was successful (no error output), but no context was provided. Please provide context now: ")));
+        if !(output.is_some() || context.is_some()) {
+            return Err(RequestError::MissingContext(String::from("Your command was successful (no output), but no context was provided. Please provide context now: ")));
         }
         Ok(Request {
             command: String::from("[command]: ") + command,
-            error: error.map(|e| String::from("[error]: ") + e),
+            output: output.map(|e| String::from("[output]: ") + e),
             context: context.map(|c| String::from("[context]: ") + c),
             justification_requested: if justification_requested {
                 Some(String::from("[justification_requested]"))
@@ -39,9 +46,9 @@ impl Request {
 
     pub fn to_payload(&self) -> String {
         let mut payload = self.command.to_string();
-        if let Some(error) = self.error.as_ref() {
+        if let Some(output) = self.output.as_ref() {
             payload += " ";
-            payload += error.as_str();
+            payload += output.as_str();
         }
         if let Some(context) = self.context.as_ref() {
             payload += " ";
@@ -174,4 +181,25 @@ pub fn get_last_command() -> Result<Request, CommandError> {
     };
 
     Request::new(cmd.as_str(), error_option, None, false).map_err(CommandError::RequestConstruction)
+}
+
+pub fn run_command_with_history(command: &String) -> Result<Output, Box<dyn Error>> {
+    let output = Command::new("sh").arg("-c").arg(command).output()?;
+    //add command run to history to allow chaining
+    let history_file = var("HISTFILE").expect("HISTFILE must be set");
+    let timestamp = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
+    let history_entry = format!(": {}:0;{}\n", timestamp, command);
+
+    // append command to history file like shell does
+    let mut file = OpenOptions::new().append(true).open(history_file)?;
+
+    file.write_all(history_entry.as_bytes())?;
+
+    if !output.stdout.is_empty() {
+        println!("{}", String::from_utf8_lossy(&output.stdout));
+    }
+    if !output.stderr.is_empty() {
+        eprintln!("{}", String::from_utf8_lossy(&output.stderr));
+    }
+    Ok(output)
 }

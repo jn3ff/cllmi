@@ -19,7 +19,7 @@ pub fn get_sys_prompt() -> String {
     "[fixed_command]: git push --set-upstream origin <branch-name> [justification]: The branch is not yet published, this command will publish the branch to remote and enable pushing"
 
     An example with context is if you receive:
-    "[command]: cat somefile.txt > somefile.txt [error]: None [context]: This command is overwriting my somefile.txt, I want it to append instead
+    "[command]: cat somefile.txt > somefile.txt [output]: None [context]: This command is overwriting my somefile.txt, I want it to append instead
 
     you might respond with:
     "[fixed_command]: cat somefile.txt >> somefile.txt [justification]: Using the '>>' operator compels appending behavior"
