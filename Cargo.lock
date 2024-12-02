@@ -260,6 +260,7 @@ dependencies = [
  "clap",
  "clipboard",
  "config",
+ "lazy_static",
  "reqwest",
  "serde",
  "serde_json",
@@ -872,6 +873,12 @@ dependencies = [
  "pest_derive",
  "serde",
 ]
+
+[[package]]
+name = "lazy_static"
+version = "1.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
 
 [[package]]
 name = "libc"

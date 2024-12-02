@@ -3,15 +3,20 @@ use std::env::var;
 use clap::{command, Parser};
 use clipboard::{ClipboardContext, ClipboardProvider};
 use interface::{get_last_command, run_command_with_history, Request};
+use lazy_static::lazy_static;
 use sysprompt::get_sys_prompt;
 
 mod interface;
 mod sysprompt;
 
+lazy_static! {
+    static ref SYS_PROMPT: String = get_sys_prompt();
+}
+
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
-    /// Model to use. This gets sent straight to the api, so if you override, make sure it's a valid model string
+    /// Model to use. This gets sent straight to the api, so if you override, make sure it's a valid model string.
     /// I also have not tested it at all with anything other than the default
     #[arg(short, long, default_value_t = String::from("claude-3-5-sonnet-20241022"))]
     model: String,
@@ -108,7 +113,7 @@ async fn ask_claude(
     let payload = serde_json::json!({
         "model": model,
         "max_tokens": 1024,
-        "system": get_sys_prompt(), //TODO: make sys prompt static
+        "system": *SYS_PROMPT,
         "messages": [
             {"role": "user", "content": req.to_payload()}
         ]

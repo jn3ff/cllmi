@@ -1,11 +1,12 @@
 Need to have CLAUDE_API_KEY set in your env to use this application
 
-to build, run the build script with ```sh build.sh```
+also I haven't yet setup a release process for installation with typical package manager, so you gotta build from source, sorry.
+to build, clone the repo, make sure you have rust installed (https://www.rust-lang.org/learn/get-started), then run the build script with ```sh build.sh```
 
 then cllmi --help for more information
 
 
-this is a stupid tool, i didn't care to handle edge cases yet, so your use has to be happypath for it to work.
+this is a stupid tool, I didn't care to handle edge cases yet, so your use has to be happypath for it to work.
 
 1. run some command
 2. run cllmi, it will suggest to you a fixed version
@@ -49,6 +50,20 @@ Press Enter to execute the command, 'c' to copy to clipboard, or Ctrl+C to cance
 From <repo>
  * [new branch]          <branch>
    main       -> origin/main
+
+------
+
+(guide mode)
+
+cllmi -g "get logs, jq filter only the message field at log level error" -c "the app I want to get logs from is named 'someapp'"
+
+Suggested command: kubectl logs deployment/someapp | jq 'select(.level == "error") | .message'
+
+Justification: This command gets logs from a Kubernetes deployment named 'someapp' and uses jq to filter for log entries where the level field equals "error", then extracts only the message field from those entries. The 'select()' function in jq filters the input based on a condition, and the pipe to '.message' extracts just that field.
+
+Press Enter to execute the command, 'c' to copy to clipboard, or Ctrl+C to cancel...
+
+------
 
 ❯ cllmi --help
 Usage: cllmi [OPTIONS]
