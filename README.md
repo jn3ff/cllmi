@@ -1,12 +1,12 @@
 Need to have CLAUDE_API_KEY set in your env to use this application
 
-also I haven't yet setup a release process for installation with typical package manager, so you gotta build from source, sorry.
+I haven't yet setup a release process for installation with typical package manager, so you gotta build from source, sorry.
 to build, clone the repo, make sure you have rust installed (https://www.rust-lang.org/learn/get-started), then run the build script with ```sh build.sh```
 
-then cllmi --help for more information
+then ```cllmi --help``` for more information
 
 
-this is a stupid tool, I didn't care to handle edge cases yet, so your use has to be happypath for it to work.
+this is a stupid tool, it's not panic-free, but I've been using it regularly for 3 months and have only had 1 crash on a nonstandard output from Claude.
 
 1. run some command
 2. run cllmi, it will suggest to you a fixed version
