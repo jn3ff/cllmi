@@ -1,4 +1,4 @@
-Need to have CLAUDE_API_KEY set in your env to use this application
+Need to have ANTHROPIC_API_KEY set in your env to use this application
 
 ## Install
 

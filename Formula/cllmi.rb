@@ -15,7 +15,7 @@ class Cllmi < Formula
   def caveats
     <<~EOS
       cllmi requires a Claude API key. Set it in your environment:
-        export CLAUDE_API_KEY="your-api-key"
+        export ANTHROPIC_API_KEY="your-api-key"
 
       Your shell must have HISTFILE set (default for zsh/bash).
     EOS

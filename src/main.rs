@@ -45,7 +45,7 @@ struct Args {
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
-    let key: String = var("CLAUDE_API_KEY").expect("must have a key set for CLAUDE_API_KEY");
+    let key: String = var("ANTHROPIC_API_KEY").expect("must have a key set for ANTHROPIC_API_KEY");
 
     let args = Args::parse();
     let mut req;

@@ -25,7 +25,7 @@ cargo run -- -j               # Run with args
 
 ## Environment Requirements
 
-- `CLAUDE_API_KEY` - Required for API access
+- `ANTHROPIC_API_KEY` - Required for API access
 - `HISTFILE` - Shell history file path (typically set by zsh/bash)
 
 ## Architecture
