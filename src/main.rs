@@ -15,7 +15,7 @@ lazy_static! {
 
 fn resolve_model(model: &str) -> String {
     match model.to_lowercase().as_str() {
-        "sonnet" => String::from("claude-sonnet-4-5-20250514"),
+        "sonnet" => String::from("claude-sonnet-4-5-20250929"),
         "opus" => String::from("claude-opus-4-5-20251101"),
         _ => String::from(model), // pass through full model strings
     }
@@ -24,8 +24,8 @@ fn resolve_model(model: &str) -> String {
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
-    /// Model to use. Shorthands: "sonnet" (default), "opus". Full model strings also accepted.
-    #[arg(short, long, default_value_t = String::from("claude-sonnet-4-5-20250514"))]
+    /// Model to use. Shorthands: "opus" (default), "sonnet". Full model strings also accepted.
+    #[arg(short, long, default_value_t = String::from("opus"))]
     model: String,
     /// Any contextual information about the goal of your command, to be sent to the api so it can make a better decision
     #[arg(short, long, default_value_t = String::from(""))]
@@ -148,16 +148,14 @@ async fn ask_claude(
 
     if !status.is_success() {
         let err = interface::Response::from_api_error(&response_text);
-        eprintln!("API error: {:?}", err);
-        std::process::exit(1);
+        panic!("API error: {:?}", err);
     }
 
     let response = interface::Response::from_string(response_text);
     match response {
         Ok(r) => Ok(r),
         Err(e) => {
-            eprintln!("Failed to parse response: {:?}", e);
-            std::process::exit(1);
+            panic!("Failed to parse response: {:?}", e);
         }
     }
 }

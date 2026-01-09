@@ -90,6 +90,7 @@ pub enum ResponseError {
 
 #[derive(Deserialize)]
 struct ApiErrorDetail {
+    r#type: String,
     message: String,
 }
 
@@ -107,7 +108,10 @@ pub struct Response {
 impl Response {
     pub fn from_api_error(response_text: &str) -> ResponseError {
         match serde_json::from_str::<ApiError>(response_text) {
-            Ok(api_err) => ResponseError::Api(api_err.error.message),
+            Ok(api_err) => ResponseError::Api(format!(
+                "{}: {}",
+                api_err.error.r#type, api_err.error.message
+            )),
             Err(_) => ResponseError::Api(response_text.to_string()),
         }
     }

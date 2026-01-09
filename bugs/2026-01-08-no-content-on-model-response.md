@@ -36,7 +36,7 @@ note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 (lol)
 
 Solution:
-- Enhance error reporting throughout the response chain (Add RequestError::Api(String) with the error body from the api on status codes >= 300 and RequestError::Parse(String) with details for any malformed content from the api.)
+- Enhance error reporting throughout the response chain (Add ResponseError::Api(String) with the error body from the api on status codes >= 300 and ResponseError::Parse(String) with details for any malformed content from the api.)
 
 
 Final: 
