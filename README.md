@@ -1,9 +1,20 @@
 Need to have CLAUDE_API_KEY set in your env to use this application
 
-I haven't yet setup a release process for installation with typical package manager, so you gotta build from source, sorry.
-to build, clone the repo, make sure you have rust installed (https://www.rust-lang.org/learn/get-started), then run the build script with ```sh build.sh```
+## Install
 
-then ```cllmi --help``` for more information
+**Homebrew:**
+```
+brew tap jn3ff/cllmi
+brew install cllmi
+```
+
+**From source:**
+clone the repo, make sure you have rust installed (https://www.rust-lang.org/learn/get-started), then run:
+```
+./build.sh
+```
+
+then `cllmi --help` for more information
 
 
 this is a stupid tool, it's not panic-free, but I've been using it regularly for 3 months and have only had 1 crash on a nonstandard output from Claude.
@@ -69,7 +80,7 @@ Press Enter to execute the command, 'c' to copy to clipboard, or Ctrl+C to cance
 Usage: cllmi [OPTIONS]
 
 Options:
-  -m, --model <MODEL>      Model to use. This gets sent straight to the api, so if you override, make sure it's a valid model string [default: claude-3-5-sonnet-20241022]
+  -m, --model <MODEL>      Model to use. Shorthands: "sonnet" (default), "opus". Full model strings also accepted [default: sonnet]
   -c, --context <CONTEXT>  Any contextual information about the goal of your command, to be sent to the api so it can make a better decision [default: ]
   -j, --justify            use flag to compel model to give you a justification for its selected command
   -g, --guide <GUIDE>      avoids looking up last command, just put in the idea for the command here [default: ]

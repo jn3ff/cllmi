@@ -29,11 +29,11 @@ impl Request {
         justification_requested: bool,
     ) -> Self {
         Request {
-            command: String::from("[command]: ") + command,
-            output: output.map(|e| String::from("[output]: ") + e),
-            context: context.map(|c| String::from("[context]: ") + c),
+            command: format!("<command>{}</command>", command),
+            output: output.map(|e| format!("<output>{}</output>", e)),
+            context: context.map(|c| format!("<context>{}</context>", c)),
             justification_requested: if justification_requested {
-                Some(String::from("[justification_requested]"))
+                Some(String::from("<justification_requested/>"))
             } else {
                 None
             },
@@ -63,11 +63,11 @@ impl Request {
     }
 
     pub fn add_context(&mut self, context: String) {
-        self.context = Some(String::from("[context]: ") + context.as_str());
+        self.context = Some(format!("<context>{}</context>", context));
     }
 
     pub fn compel_justification(&mut self) {
-        self.justification_requested = Some(String::from("[justification_requested]"))
+        self.justification_requested = Some(String::from("<justification_requested/>"))
     }
 }
 
@@ -84,7 +84,18 @@ struct ClaudeResponse {
 
 #[derive(Debug)]
 pub enum ResponseError {
-    BadResponse(String),
+    Api(String),
+    Parse(String),
+}
+
+#[derive(Deserialize)]
+struct ApiErrorDetail {
+    message: String,
+}
+
+#[derive(Deserialize)]
+struct ApiError {
+    error: ApiErrorDetail,
 }
 
 #[derive(Debug)]
@@ -94,41 +105,46 @@ pub struct Response {
 }
 
 impl Response {
+    pub fn from_api_error(response_text: &str) -> ResponseError {
+        match serde_json::from_str::<ApiError>(response_text) {
+            Ok(api_err) => ResponseError::Api(api_err.error.message),
+            Err(_) => ResponseError::Api(response_text.to_string()),
+        }
+    }
+
     pub fn from_string(response_text: String) -> Result<Self, ResponseError> {
         let response = serde_json::from_str::<ClaudeResponse>(&response_text)
-            .map_err(|e| ResponseError::BadResponse(e.to_string()))?;
+            .map_err(|e| ResponseError::Parse(format!("{}: {}", e, response_text)))?;
 
         let content = response
             .content
             .first()
-            .ok_or_else(|| ResponseError::BadResponse("Empty response content".to_string()))?;
+            .ok_or_else(|| ResponseError::Parse("Empty response content".to_string()))?;
 
-        let response = if content.text.contains("[justification]") {
-            // split on [justification] and process both parts
-            let parts: Vec<&str> = content.text.split("[justification]: ").collect();
-            let command = parts[0]
-                .trim_start_matches("[fixed_command]: ")
-                .trim()
-                .to_string();
-            let justification = Some(parts[1].trim().to_string());
+        let command = Self::extract_tag_content(&content.text, "fixed_command")
+            .ok_or_else(|| ResponseError::Parse("No fixed_command tag found".to_string()))?;
 
-            Response {
-                command,
-                justification,
-            }
+        let justification = Self::extract_tag_content(&content.text, "justification");
+
+        Ok(Response {
+            command,
+            justification,
+        })
+    }
+
+    fn extract_tag_content(text: &str, tag: &str) -> Option<String> {
+        let open_tag = format!("<{}>", tag);
+        let close_tag = format!("</{}>", tag);
+
+        let start = text.find(&open_tag)?;
+        let end = text.find(&close_tag)?;
+
+        let content_start = start + open_tag.len();
+        if content_start < end {
+            Some(text[content_start..end].trim().to_string())
         } else {
-            // just process the command part
-            Response {
-                command: content
-                    .text
-                    .trim_start_matches("[fixed_command]: ")
-                    .trim()
-                    .to_string(),
-                justification: None,
-            }
-        };
-
-        Ok(response)
+            None
+        }
     }
 }
 

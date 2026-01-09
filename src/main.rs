@@ -13,12 +13,19 @@ lazy_static! {
     static ref SYS_PROMPT: String = get_sys_prompt();
 }
 
+fn resolve_model(model: &str) -> String {
+    match model.to_lowercase().as_str() {
+        "sonnet" => String::from("claude-sonnet-4-5-20250514"),
+        "opus" => String::from("claude-opus-4-5-20251101"),
+        _ => String::from(model), // pass through full model strings
+    }
+}
+
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
-    /// Model to use. This gets sent straight to the api, so if you override, make sure it's a valid model string.
-    /// I also have not tested it at all with anything other than the default
-    #[arg(short, long, default_value_t = String::from("claude-3-5-sonnet-20241022"))]
+    /// Model to use. Shorthands: "sonnet" (default), "opus". Full model strings also accepted.
+    #[arg(short, long, default_value_t = String::from("claude-sonnet-4-5-20250514"))]
     model: String,
     /// Any contextual information about the goal of your command, to be sent to the api so it can make a better decision
     #[arg(short, long, default_value_t = String::from(""))]
@@ -30,6 +37,10 @@ struct Args {
     /// avoids looking up last command, just put in the idea for the command here
     #[arg(short, long, default_value_t = String::from(""))]
     guide: String,
+
+    /// print raw model response for debugging
+    #[arg(long, default_value_t = false)]
+    debug: bool,
 }
 
 #[tokio::main(flavor = "current_thread")]
@@ -59,7 +70,8 @@ async fn main() {
         req.compel_justification();
     }
 
-    let res = ask_claude(req, args.model, key).await.unwrap();
+    let model = resolve_model(&args.model);
+    let res = ask_claude(req, model, key, args.debug).await.unwrap();
 
     println!("\nSuggested command: {}", res.command);
     if let Some(justification) = res.justification {
@@ -106,6 +118,7 @@ async fn ask_claude(
     req: Request,
     model: String,
     key: String,
+    debug: bool,
 ) -> Result<interface::Response, Box<dyn std::error::Error>> {
     let client = reqwest::Client::new();
 
@@ -127,8 +140,24 @@ async fn ask_claude(
         .send()
         .await?;
 
+    let status = response.status();
     let response_text = response.text().await?;
-    let response = interface::Response::from_string(response_text)
-        .expect("failed to deserialize response from the api");
-    Ok(response)
+    if debug {
+        eprintln!("\n[DEBUG] Raw API response:\n{}\n", response_text);
+    }
+
+    if !status.is_success() {
+        let err = interface::Response::from_api_error(&response_text);
+        eprintln!("API error: {:?}", err);
+        std::process::exit(1);
+    }
+
+    let response = interface::Response::from_string(response_text);
+    match response {
+        Ok(r) => Ok(r),
+        Err(e) => {
+            eprintln!("Failed to parse response: {:?}", e);
+            std::process::exit(1);
+        }
+    }
 }
